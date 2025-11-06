@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<modDesc descVersion="93">
+    <author>Papa_Matze</author>
+	<loadModDesc priority="999" /><version>1.0.3</version>
+	<title>
+        <en>REA25 Center Of Gravity</en>
+    </title>
+<description>
+<en>
+The goal of this mod is to make the game feel more realistic and
+customizing the vehicle for the task more rewarding.
+The goal is to make the mod universal.
+This mod supports multiplayer and dedicated servers.
+No changes in XML is needed. Some data from XML is overwritten!
+
+Center of gravity is changed based on the position of the wheels axis and radius:
+Typical center of mass is 25cm above rear wheel axle.
+Wheel width and twin wheels now effects stability:
+- Wider tires or twin wheels for more stability
+- Narrow tires for less stability.
+
+1.0.1.0
+Center of mass changes if there is anything loaded to the vehicle:
+- If there is a fill volume the center of mass moves towards the center of the fill volume.
+- If there is no fill volume the center of mass gets higher at the vehicles center of mass.
+
+1.0.1.1
+Changes for center of mass for fill volumes:
+- Is now updated less frequently.
+- Is only updated with a load.
+- Is only updated for active vehicles.
+
+</en>
+<de>
+Das Ziel dieses Mods ist es, das Spiel realistischer und
+die Anpassung des Fahrzeugs an die jeweilige Aufgabe lohnender zu machen.
+Es soll den Mod auch versuchen universell zu machen.
+Dieser Mod unterstützt den Multiplayer und dedizierte Server.
+Es sind keine XML-Änderungen erforderlich. Einige Daten aus XML werden überschrieben!
+
+Der Schwerpunkt wird basierend auf der Position der Radachse und dem Radius geändert:
+Der typische Massenschwerpunkt liegt 25 cm über der Hinterradachse.
+Reifenbreite und Zwillingsbereifung wirken sich jetzt auf die Stabilität aus:
+- Breitere Reifen oder Doppelbereifung für mehr Stabilität
+- Schmale Reifen für weniger Stabilität.
+
+1.0.1.0
+Der Schwerpunkt ändert sich, wenn das Fahrzeug beladen ist:
+- Bei einem Füllvolumen verschiebt sich der Massenmittelpunkt in Richtung Füllvolumenmitte.
+- Wenn kein Füllvolumen vorhanden ist, liegt der Schwerpunkt höher als der Schwerpunkt des Fahrzeugs.
+
+1.0.1.1
+Änderungen des Massenschwerpunkts für Füllvolumina:
+- Wird jetzt seltener aktualisiert.
+- Wird nur bei Last aktualisiert.
+- Wird nur für aktive Fahrzeuge aktualisiert.
+
+</de>
+</description>
+	<l10n>
+	</l10n>
+    <iconFilename>icon_REAcog.dds</iconFilename>
+	<multiplayer supported="true" />
+    <extraSourceFiles>
+        <sourceFile filename="REAcog.lua" />
+    <sourceFile filename="REAcog_patched.lua" /></extraSourceFiles>
+</modDesc>
