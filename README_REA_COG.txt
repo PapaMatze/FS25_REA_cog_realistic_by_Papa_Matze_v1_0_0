@@ -1,11 +1,7 @@
-<?xml version='1.0' encoding='utf-8'?>
-<modDesc descVersion="93">
-    <author>Papa_Matze</author>
-	<loadModDesc priority="999" /><version>1.0.4</version>
-	<title>
-        <en>REA25 Center Of Gravity</en>
-    </title>
-<description>
+
+REA COG REALISTIC - README
+---------------------------
+
 <en>
 The goal of this mod is to make the game feel more realistic and
 customizing the vehicle for the task more rewarding.
@@ -29,8 +25,8 @@ Changes for center of mass for fill volumes:
 - Is now updated less frequently.
 - Is only updated with a load.
 - Is only updated for active vehicles.
-
 </en>
+
 <de>
 Das Ziel dieses Mods ist es, das Spiel realistischer und
 die Anpassung des Fahrzeugs an die jeweilige Aufgabe lohnender zu machen.
@@ -55,13 +51,5 @@ Der Schwerpunkt ändert sich, wenn das Fahrzeug beladen ist:
 - Wird nur bei Last aktualisiert.
 - Wird nur für aktive Fahrzeuge aktualisiert.
 
+Euer Papa Matze
 </de>
-</description>
-	<l10n>
-	</l10n>
-    <iconFilename>icon_REAcog.dds</iconFilename>
-	<multiplayer supported="true" />
-    <extraSourceFiles>
-        <sourceFile filename="REAcog.lua" />
-    <sourceFile filename="REAcog_patched.lua" /></extraSourceFiles>
-</modDesc>
