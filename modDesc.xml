@@ -56,6 +56,28 @@ Der Schwerpunkt ändert sich, wenn das Fahrzeug beladen ist:
 - Wird nur für aktive Fahrzeuge aktualisiert.
 
 </de>
+<fr>
+L’objectif de ce mod est de rendre le jeu plus réaliste et de rendre l’adaptation du véhicule à chaque tâche plus gratifiante.
+Le but est également d’en faire un mod universel. Ce mod prend en charge le multijoueur et les serveurs dédiés.
+Aucune modification des fichiers XML n’est nécessaire. Certaines données XML sont remplacées !
+
+Le centre de gravité est ajusté en fonction de la position de l’essieu et du rayon des roues :
+Le centre de gravité typique se situe à 25 cm au-dessus de l’essieu arrière.
+La largeur des pneus et la présence de roues jumelées influencent désormais la stabilité :
+Des pneus plus larges ou une double monte offrent plus de stabilité.
+Des pneus plus étroits réduisent la stabilité.
+
+1.0.1.0
+Le centre de gravité change lorsque le véhicule est chargé :
+Avec un volume de remplissage, le centre de masse se déplace vers le centre de ce volume.
+S’il n’y a pas de volume de remplissage, le centre de gravité se situe plus haut que celui du véhicule.
+
+1.0.1.1
+Ajustements du centre de gravité pour les volumes de remplissage :
+Les mises à jour sont désormais moins fréquentes.
+Elles ne se produisent qu’en cas de charge.
+Elles ne concernent que les véhicules actifs.
+</fr>
 </description>
 	<l10n>
 	</l10n>
