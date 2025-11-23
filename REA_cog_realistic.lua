@@ -1,126 +1,168 @@
--- ===========================================================
--- REA COG FS25 – Final Edition (v1.0.5)
--- by Papa_Matze – Improved by ChatGPT Repair/Patch
--- ===========================================================
+--============================================================--
+--  REA Center of Gravity – Realistic Weight & Stability
+--  by Papa_Matze
+--  Version: 1.0.7.0
+--============================================================--
 
-REACOG = {}
-REACOG.version = "1.0.5"
+REAcog = {}
+REAcog.version = "1.0.7.0"
 
--- Strength multipliers
-REACOG.cogShiftFactor     = 2.60   -- Wie stark der Schwerpunkt sich verlagert
-REACOG.cogTiltFactor      = 1.85   -- Seitenneigung
-REACOG.helperEffect       = 1.75   -- Helfer-Verhalten verbessern
-REACOG.speedInfluence     = 0.015  -- Einfluss von Geschwindigkeit
-REACOG.workloadInfluence  = 0.020  -- Einfluss der Geräte-Last
+---------------------------------------------------------------------
+-- Tuning-Werte
+---------------------------------------------------------------------
+REAcog.BaseStability        = 1.4      -- Grundstabilität
+REAcog.WeightInfluence      = 2.2      -- Einfluss von Ladung/Füllmenge
+REAcog.SideSlopeSensitivity = 1.6      -- Seitenhang-Empfindlichkeit
+REAcog.SpeedStabilityFactor = 1.3      -- Stabilität bei Geschwindigkeit
 
-REACOG.debug = false
+-- NEU → Helfer-Schwankphysik stärker / realer
+REAcog.HelperRollFactor     = 1.25     -- KI schwankt 25% stärker seitlich
+REAcog.HelperWeightBoost    = 1.15     -- KI spürt Gewicht 15% stärker
+REAcog.HelperStabilityDrop  = 0.85     -- KI hat etwas weniger Grundstabilität
 
---------------------------------------------------------------------
--- UPDATE LOOP
---------------------------------------------------------------------
-function REACOG:update(dt)
-    if g_currentMission == nil then return end
-    if g_currentMission.vehicles == nil then return end
+---------------------------------------------------------------------
+-- Map Events
+---------------------------------------------------------------------
 
-    for _, vehicle in ipairs(g_currentMission.vehicles) do
-        if vehicle.spec_motorized ~= nil then
-            self:updateVehicleCOG(vehicle, dt)
+function REAcog:loadMap(name)
+    print("REA Center of Gravity geladen – Version " .. REAcog.version)
+end
+
+function REAcog:deleteMap()
+end
+
+function REAcog:update(dt)
+    if g_currentMission == nil or g_currentMission.vehicles == nil then
+        return
+    end
+
+    for _, vehicle in pairs(g_currentMission.vehicles) do
+        REAcog:updateVehicleCOG(vehicle, dt)
+    end
+end
+
+function REAcog:draw()
+end
+
+---------------------------------------------------------------------
+-- Schwerpunkt je Fahrzeug
+---------------------------------------------------------------------
+
+function REAcog:updateVehicleCOG(vehicle, dt)
+    if vehicle == nil or vehicle.components == nil then
+        return
+    end
+
+    if vehicle.spec_enterable == nil then
+        return
+    end
+
+    local isAI = vehicle.getIsAIActive ~= nil and vehicle:getIsAIActive()
+
+    ---------------------------------------------------------
+    -- Basisstabilität
+    ---------------------------------------------------------
+    local stability = REAcog.BaseStability
+
+    -- Helfer bekommen realistischere, dynamischere Physik
+    if isAI then
+        stability = stability * REAcog.HelperStabilityDrop
+    end
+
+    ---------------------------------------------------------
+    -- Geschwindigkeit
+    ---------------------------------------------------------
+    local speed = 0
+    if vehicle.getLastSpeed ~= nil then
+        speed = vehicle:getLastSpeed()
+    elseif vehicle.lastSpeed ~= nil then
+        speed = vehicle.lastSpeed * 3600
+    end
+
+    if speed > 20 then
+        local drop = ((speed - 20) / 40) * 0.3 * REAcog.SpeedStabilityFactor
+        stability = stability - drop
+    end
+
+    ---------------------------------------------------------
+    -- Füllmengen / Gewicht
+    ---------------------------------------------------------
+    local dynamicWeight = 0
+    if vehicle.getFillUnits ~= nil then
+        local units = vehicle:getFillUnits()
+        for i = 1, #units do
+            local lvl = vehicle:getFillUnitFillLevel(i) or 0
+            local cap = vehicle:getFillUnitCapacity(i)   or 1
+            dynamicWeight = dynamicWeight + (lvl / cap)
         end
     end
-end
 
---------------------------------------------------------------------
--- MAIN COG FUNCTION
---------------------------------------------------------------------
-function REACOG:updateVehicleCOG(vehicle, dt)
-    if vehicle.components == nil then return end
-    local comp = vehicle.components[1]
-    if comp == nil then return end
+    local weightEffect = dynamicWeight * 0.7 * REAcog.WeightInfluence
 
-    local isHelper = vehicle.getIsAIActive ~= nil and vehicle:getIsAIActive()
-
-    -------------------------------------------------
-    -- Determine shift factors
-    -------------------------------------------------
-    local speed     = math.abs(vehicle.lastSpeed * 3600)
-    local throttle  = math.abs(vehicle:getLastInputAxis(1) or 0)
-    local load      = self:getImplementLoad(vehicle)
-
-    local speedShift = speed * REACOG.speedInfluence
-    local loadShift  = load * REACOG.workloadInfluence
-
-    local finalShift = (speedShift + loadShift) * REACOG.cogShiftFactor
-
-    if isHelper then
-        finalShift = finalShift * REACOG.helperEffect
+    -- Helfer haben mehr Gewichtseinfluss
+    if isAI then
+        weightEffect = weightEffect * REAcog.HelperWeightBoost
     end
 
-    -------------------------------------------------
-    -- Compute lateral tilt (side forces)
-    -------------------------------------------------
-    local tiltForce = (speed * 0.004) * REACOG.cogTiltFactor
-    if tiltForce > 0.35 then tiltForce = 0.35 end
+    stability = stability - weightEffect
 
-    -------------------------------------------------
-    -- APPLY SHIFT
-    -------------------------------------------------
-    local x, y, z = getTranslation(comp.node)
-    y = y + finalShift * 0.001
-
-    setTranslation(comp.node, x, y, z)
-
-    -------------------------------------------------
-    -- APPLY TILT
-    -------------------------------------------------
-    local rx, ry, rz = getRotation(comp.node)
-    rx = rx + tiltForce * 0.005
-
-    setRotation(comp.node, rx, ry, rz)
-
-    -------------------------------------------------
-    -- DEBUG
-    -------------------------------------------------
-    if REACOG.debug and REA_WHEELS and REA_WHEELS.DEBUG_ENABLED then
-        setTextColor(1,1,1,1)
-        setTextAlignment(RenderText.ALIGN_RIGHT)
-        renderText(0.98, 0.55, 0.018,
-            string.format("REA COG v%s  Shift=%.3f Tilt=%.3f Load=%.2f",
-                REACOG.version, finalShift, tiltForce, load))
-    end
-end
-
---------------------------------------------------------------------
--- Additional load from implements
---------------------------------------------------------------------
-function REACOG:getImplementLoad(vehicle)
-    local load = 0
-
-    if vehicle.getAttachedImplements == nil then
-        return 0
-    end
-
-    for _, impl in ipairs(vehicle:getAttachedImplements()) do
-        if impl.object ~= nil and impl.object.spec_workArea ~= nil then
-            if impl.object.getIsWorkAreaActive ~= nil then
-                if impl.object:getIsWorkAreaActive() then
-                    load = load + 1.0
+    ---------------------------------------------------------
+    -- Anhängende Geräte / Anhänger
+    ---------------------------------------------------------
+    if vehicle.attachedImplements ~= nil then
+        for _, impl in pairs(vehicle.attachedImplements) do
+            if impl.object ~= nil then
+                local drop = 0.15 * REAcog.WeightInfluence
+                if isAI then
+                    drop = drop * REAcog.HelperWeightBoost
                 end
+                stability = stability - drop
             end
         end
     end
 
-    return load
+    ---------------------------------------------------------
+    -- Seitenneigung (Hang)
+    ---------------------------------------------------------
+    local rollDeg = 0
+    if vehicle.rootNode ~= nil then
+        local rx, ry, rz = getRotation(vehicle.rootNode)
+        rollDeg = math.deg(rx)
+    end
+
+    if math.abs(rollDeg) > 5 then
+        local slope = ((math.abs(rollDeg) - 5) / 30) * REAcog.SideSlopeSensitivity
+
+        -- KI schwankt stärker in der Seitenlage
+        if isAI then
+            slope = slope * REAcog.HelperRollFactor
+        end
+
+        stability = stability - slope
+    end
+
+    ---------------------------------------------------------
+    -- Finaler Stabilitätswert
+    ---------------------------------------------------------
+    local finalStability = math.max(0.1, stability)
+
+    ---------------------------------------------------------
+    -- Schwerpunkt absenken / anpassen
+    ---------------------------------------------------------
+    for _, comp in pairs(vehicle.components) do
+        if comp ~= nil and comp.node ~= nil then
+            local origX, origY, origZ = getCenterOfMass(comp.node)
+
+            -- Schwerpunkt tiefer → stabiler
+            local newY = origY - (0.4 * (1 - finalStability))
+
+            setCenterOfMass(comp.node, origX, newY, origZ)
+        end
+    end
 end
 
---------------------------------------------------------------------
--- FS25 Register
---------------------------------------------------------------------
-function REACOG.prerequisitesPresent(s)
-    return true
-end
+---------------------------------------------------------------------
+-- Registrierung
+---------------------------------------------------------------------
 
-function REACOG.registerEventListeners(vehicleType)
-    SpecializationUtil.registerEventListener(vehicleType, "update", REACOG)
-end
-
-addModEventListener(REACOG)
+addModEventListener(REAcog)
